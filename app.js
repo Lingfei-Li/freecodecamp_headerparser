@@ -3,6 +3,7 @@ var path = require('path');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var uaParser = require('ua-parser');
 
 
 var app = express();
@@ -18,15 +19,22 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 
 app.all('*', (req, res) => {
-    console.log(req.connection.remoteAddress);
-    console.log(req.headers['x-forwarded-for']);
-    var str = req.connection.remoteAddress + ' ' + req.headers['x-forwarded-for'];
-    var ip = req.headers['x-forwarded-for'] ||
+    res.json(getClientInfo(req));
+});
+
+var getClientInfo= (req)=>{
+    var ipaddress = req.headers['x-forwarded-for'] ||
         req.connection.remoteAddress ||
         req.socket.remoteAddress ||
         req.connection.socket.remoteAddress;
-    res.send(ip);
-});
+    var language = req.headers['accept-language'].split(',')[0];
+    var software = uaParser.parseOS(req.headers['user-agent']).toString();
+    return {
+        ipaddress,
+        language,
+        software
+    };
+};
 
 
 
